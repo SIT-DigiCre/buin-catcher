@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>SIT 学生証リーダー</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            cursor: pointer; /* 画面全体をクリックできるようにポインターにする */
+        }
+
+        /* =========================================
+            オープニングスプラッシュ画面 (待機画面)
+            ========================================= */
+        .splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #0056b3; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999; 
+            transition: opacity 0.8s ease, visibility 0.8s ease; 
+        }
+
+        .splash.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .splash img {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        /* 音声ロック解除＆フルスクリーンのお願いメッセージ */
+        .unlock-msg {
+            color: white;
+            margin-top: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            opacity: 0.8;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* =========================================
+            メインコンテンツ
+            ========================================= */
+        .container {
+            background: white;
+            padding: 40px 80px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative; 
+            z-index: 10;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .status {
+            color: #888;
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        .id-presenter {
+            position: relative;
+            display: inline-block;
+            padding: 0 50px; 
+        }
+        .id-display {
+            font-size: 64px;
+            font-weight: bold;
+            color: #0056b3;
+            min-height: 80px;
+            position: relative;
+            z-index: 5; 
+        }
+        .cracker {
+            position: absolute;
+            font-size: 80px;
+            top: 50%;
+            transform: translateY(-50%) scale(0); 
+            opacity: 0;
+            pointer-events: none; 
+            z-index: 1;
+        }
+        .cracker-left {
+            left: -60px;
+        }
+        .cracker-right {
+            right: -60px;
+            transform: translateY(-50%) scale(0) scaleX(-1); 
+        }
+
+        /* =========================================
+            アニメーション定義
+            ========================================= */
+        .pop .id-display {
+            animation: idPopAnimation 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: #ff3366;
+        }
+        .pop .cracker-left {
+            animation: crackerLeftAnimation 0.6s ease-out forwards;
+        }
+        .pop .cracker-right {
+            animation: crackerRightAnimation 0.6s ease-out forwards;
+        }
+
+        @keyframes idPopAnimation {
+            0% { transform: scale(0.5); opacity: 0; color: #0056b3; }
+            50% { transform: scale(1.2); color: #ff3366; }
+            100% { transform: scale(1); opacity: 1; color: #0056b3; }
+        }
+        @keyframes crackerLeftAnimation {
+            0% { transform: translateY(-50%) scale(0) rotate(-30deg); opacity: 0; }
+            20% { transform: translateY(-80%) scale(1.5) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100%) scale(1.2) rotate(10deg); opacity: 0; }
+        }
+        @keyframes crackerRightAnimation {
+            0% { transform: translateY(-50%) scale(0) scaleX(-1) rotate(30deg); opacity: 0; }
+            20% { transform: translateY(-80%) scale(1.5) scaleX(-1) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100%) scale(1.2) scaleX(-1) rotate(-10deg); opacity: 0; }
+        }
+
+        /* =========================================
+            待機中アイコン用スタイル (右下)
+            ========================================= */
+        .waiting-icon {
+            position: fixed;
+            bottom: 30px;
+            right: 40px;
+            width: 64px;
+            height: 64px;
+            background-color: #0056b3;
+            border-radius: 50%; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 86, 179, 0.3);
+            z-index: 100;
+            pointer-events: none;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        .waiting-icon img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="splash" id="splash">
+        <img src="/digicre_logo.svg" alt="デジクリロゴ">
+        <div class="unlock-msg" id="unlock-msg">画面をタップしてフルスクリーンで開始してください</div>
+    </div>
+
+    <div class="container">
+        <h1>タッチありがとう！</h1>
+        <div class="status">入部メールを送信します</div>
+        
+        <div id="id-presenter" class="id-presenter">
+            <div class="cracker cracker-left">🎉</div>
+            <div id="student-id" class="id-display">--------</div>
+            <div class="cracker cracker-right">🎉</div>
+        </div>
+    </div>
+
+    <div class="waiting-icon" id="waiting-icon">
+        <img src="/digicre_logo.svg" alt="待機中ロゴ">
+    </div>
+
+    <audio id="fanfare-sound" src="fanfare.wav" preload="auto"></audio>
+
+    <script>
+        const idPresenter = document.getElementById('id-presenter');
+        const idDisplay = document.getElementById('student-id');
+        const fanfareSound = document.getElementById('fanfare-sound');
+        const splashScreen = document.getElementById('splash');
+        const unlockMsg = document.getElementById('unlock-msg');
+
+        let isAudioUnlocked = false;
+
+        // 待機画面に戻るまでの時間（ミリ秒）: 5秒
+        const IDLE_TIMEOUT_MS = 5000;
+        let idleTimer; 
+        let resetTextTimer; 
+
+        // 1. フルスクリーン化 ＆ 音声のロック解除処理
+        document.body.addEventListener('click', () => {
+            
+            // フルスクリーン化をリクエスト
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`フルスクリーン化エラー: ${err.message}`);
+                });
+            }
+
+            // 音声ロック解除（初回のみ）
+            if (!isAudioUnlocked) {
+                fanfareSound.volume = 0; 
+                fanfareSound.play().then(() => {
+                    fanfareSound.pause();
+                    fanfareSound.currentTime = 0;
+                    fanfareSound.volume = 1; 
+                    
+                    isAudioUnlocked = true;
+                    unlockMsg.style.display = 'none'; // メッセージを隠す
+                    console.log("システムの準備が完了しました！（音声ロック解除済）");
+                }).catch(e => console.log("ロック解除エラー:", e));
+            }
+        });
+
+        // 2. サーバーからのデータ受信処理
+        const evtSource = new EventSource("/events");
+
+        evtSource.onmessage = function(event) {
+            const studentId = event.data;
+            
+            if (!splashScreen.classList.contains('hidden')) {
+                splashScreen.classList.add('hidden');
+            }
+            
+            clearTimeout(idleTimer);
+            clearTimeout(resetTextTimer);
+            
+            idDisplay.innerText = studentId;
+
+            idPresenter.classList.remove('pop');
+            void idPresenter.offsetWidth; 
+            idPresenter.classList.add('pop');
+
+            fanfareSound.currentTime = 0; 
+            fanfareSound.play().catch(e => {
+                console.log("音声再生エラー: 画面が一度もタップされていません", e);
+            });
+
+            idleTimer = setTimeout(() => {
+                splashScreen.classList.remove('hidden'); 
+                
+                resetTextTimer = setTimeout(() => {
+                    idDisplay.innerText = "--------";
+                }, 800);
+                
+            }, IDLE_TIMEOUT_MS);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 176 48">
+  <g id="a" data-name="ja">
+    <g id="b" data-name="デ">
+      <polygon points="29 14 4 14 7 8 32 8 29 14"/>
+      <polygon points="26 24 20 24 16 32 8 32 12 24 0 24 3 18 29 18 26 24"/>
+      <polygon points="30 6 26 6 28 0 32 0 30 6"/>
+      <polygon points="24 6 20 6 22 0 26 0 24 6"/>
+    </g>
+    <g id="c" data-name="ジ">
+      <polygon points="62 14 52 14 55 8 65 8 62 14"/>
+      <polygon points="58 24 48 24 51 18 61 18 58 24"/>
+      <polygon points="68 32 60 32 72 8 80 8 68 32"/>
+      <polygon points="78 6 74 6 76 0 80 0 78 6"/>
+      <polygon points="72 6 68 6 70 0 74 0 72 6"/>
+    </g>
+    <g id="d" data-name="ク">
+      <polygon points="116 32 108 32 117 14 109 14 104 24 96 24 104 8 128 8 116 32"/>
+    </g>
+    <g id="e" data-name="リ">
+      <polygon points="164 32 156 32 168 8 176 8 164 32"/>
+      <polygon points="154 24 144 24 152 8 160 8 155 18 157 18 154 24"/>
+    </g>
+  </g>
+  <g id="f" data-name="en">
+    <g id="g" data-name="D">
+      <polygon points="2 39 6 39 6 38 2 38 0 38 0 46 2 46 6 46 6 45 2 45 2 39"/>
+      <rect x="6" y="39" width="2" height="6"/>
+    </g>
+    <g id="h" data-name="i">
+      <rect x="10" y="40" width="2" height="6"/>
+      <rect x="10" y="38" width="2" height="1"/>
+    </g>
+    <path id="i" data-name="g" d="M14,40v6h6v1h-4v1h6v-8h-8ZM20,45h-4v-4h4v4Z"/>
+    <g id="j" data-name="i">
+      <rect x="24" y="40" width="2" height="6"/>
+      <rect x="24" y="38" width="2" height="1"/>
+    </g>
+    <polygon id="k" data-name="t" points="34 41 34 40 31 40 31 38 29 38 29 40 28 40 28 41 29 41 29 45 29 46 31 46 34 46 34 45 31 45 31 41 34 41"/>
+    <path id="l" data-name="a" d="M38,40v1h4v1h-6v4h8v-6h-6ZM42,45h-4v-2h4v2Z"/>
+    <polygon id="m" data-name="l" points="48 45 48 38 46 38 46 46 48 46 50 46 50 45 48 45"/>
+    <polygon id="n" data-name="C" points="66 40 66 38 64 38 60 38 58 38 58 46 60 46 64 46 66 46 66 43 64 43 64 45 60 45 60 39 64 39 64 40 66 40"/>
+    <polygon id="o" data-name="r" points="70 40 68 40 68 46 70 46 70 41 72 41 72 40 70 40"/>
+    <path id="p" data-name="e" d="M74,40v6h8v-1h-6v-2h6v-3h-8ZM80,42h-4v-1h4v1Z"/>
+    <path id="q" data-name="a" d="M86,40v1h4v1h-6v4h8v-6h-6ZM90,45h-4v-2h4v2Z"/>
+    <polygon id="r" data-name="t" points="100 41 100 40 97 40 97 38 95 38 95 40 94 40 94 41 95 41 95 45 95 46 97 46 100 46 100 45 97 45 97 41 100 41"/>
+    <g id="s" data-name="i">
+      <rect x="102" y="40" width="2" height="6"/>
+      <rect x="102" y="38" width="2" height="1"/>
+    </g>
+    <path id="t" data-name="o" d="M106,40v6h8v-6h-8ZM112,45h-4v-4h4v4Z"/>
+    <g id="u" data-name="n">
+      <rect x="122" y="41" width="2" height="5"/>
+      <polygon points="118 40 116 40 116 46 118 46 118 41 122 41 122 40 118 40"/>
+    </g>
+    <polygon id="v" data-name="C" points="140 40 140 38 138 38 134 38 132 38 132 46 134 46 138 46 140 46 140 43 138 43 138 45 134 45 134 39 138 39 138 40 140 40"/>
+    <g id="w" data-name="i">
+      <rect x="142" y="40" width="2" height="6"/>
+      <rect x="142" y="38" width="2" height="1"/>
+    </g>
+    <polygon id="x" data-name="r" points="148 40 146 40 146 46 148 46 148 41 150 41 150 40 148 40"/>
+    <polygon id="y" data-name="c" points="152 40 152 41 152 45 152 46 160 46 160 45 160 44 158 44 158 45 154 45 154 41 158 41 158 42 160 42 160 41 160 40 152 40"/>
+    <polygon id="z" data-name="l" points="164 45 164 38 162 38 162 46 164 46 166 46 166 45 164 45"/>
+    <path id="aa" data-name="e" d="M168,40v6h8v-1h-6v-2h6v-3h-8ZM174,42h-4v-1h4v1Z"/>
+  </g>
+</svg>
