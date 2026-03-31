@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -13,6 +15,11 @@ import (
 
 // ブラウザへ通知を送るためのチャンネル
 var cardEventChan = make(chan string, 10)
+
+func init() {
+	// デバッグログを出力しない
+	log.SetOutput(io.Discard)
+}
 
 func main() {
 	// 1. NFCリーダーの監視をバックグラウンド（別のゴルーチン）で開始
@@ -47,9 +54,9 @@ func sseHandler(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		select {
-		// NFCリーダーから学籍番号が送られてきたらブラウザへ送信
-		case studentID := <-cardEventChan:
-			fmt.Fprintf(w, "data: %s\n\n", studentID)
+		// NFCリーダーからデータが送られてきたらブラウザへ送信
+		case dataStr := <-cardEventChan:
+			fmt.Fprintf(w, "data: %s\n\n", dataStr)
 			flusher.Flush()
 		// ブラウザが閉じられたら終了
 		case <-r.Context().Done():
@@ -58,7 +65,7 @@ func sseHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// これまでのNFC読み取りループ（無限ループ）
+// NFC読み取りループ
 func startNFCReader() {
 	ctx, err := scard.EstablishContext()
 	if err != nil {
@@ -90,6 +97,7 @@ func startNFCReader() {
 	}
 }
 
+// カードの処理（物理カード専用）
 func processCard(ctx *scard.Context, readerName string) {
 	card, err := ctx.Connect(readerName, scard.ShareShared, scard.ProtocolAny)
 	if err != nil {
@@ -97,25 +105,46 @@ func processCard(ctx *scard.Context, readerName string) {
 	}
 	defer card.Disconnect(scard.LeaveCard)
 
-	// 通信確認
+	// 通信確認 (IDmの取得)
 	idmCmd := []byte{0xFF, 0xCA, 0x00, 0x00, 0x00}
 	rsp, err := card.Transmit(idmCmd)
-	if err != nil || len(rsp) < 2 || rsp[len(rsp)-2] != 0x90 {
+	
+	// 物理のFeliCaカードであれば、10バイト以上のレスポンスが返ります
+	if err != nil || len(rsp) < 10 {
 		return
 	}
 
+	// 1. まずは学生証かチェック
+	if tryReadStudentCard(card) {
+		return
+	}
+
+	// 2. 学生証でなければ交通系IC（物理）かチェック
+	if tryReadICCard(card) {
+		return
+	}
+}
+
+// 学生証読み取り処理
+func tryReadStudentCard(card *scard.Card) bool {
 	// 芝浦工大のサービスコード(010B)を選択
 	selectCmd := []byte{0xFF, 0xA4, 0x00, 0x01, 0x02, 0x0B, 0x01}
-	rsp, err = card.Transmit(selectCmd)
-	if err != nil || len(rsp) < 2 || (rsp[len(rsp)-2] != 0x90 && rsp[len(rsp)-2] != 0x91) {
-		return
+	rsp, err := card.Transmit(selectCmd)
+	
+	if err != nil || len(rsp) < 2 {
+		return false
+	}
+
+	statusWord := rsp[len(rsp)-2 : len(rsp)]
+	if statusWord[0] != 0x90 && statusWord[0] != 0x91 {
+		return false
 	}
 
 	// データ読み出し
 	readCmd := []byte{0xFF, 0xB0, 0x00, 0x00, 0x10}
 	rsp, err = card.Transmit(readCmd)
 	if err != nil || len(rsp) < 18 {
-		return
+		return false
 	}
 
 	// 学籍番号抽出（3〜9バイト目）
@@ -124,14 +153,65 @@ func processCard(ctx *scard.Context, readerName string) {
 	// CSVに保存
 	saveToCSV(studentID)
 
-	// ★WebUI（ブラウザ）へ学籍番号をプッシュ送信！
-	select {
-	case cardEventChan <- studentID:
-	default:
-		// チャンネルが詰まっている場合はスキップ
+	// JSON形式で作成
+	cardData := map[string]interface{}{
+		"type":      "student",
+		"student_id": studentID,
+		"card_name": "SIT Student Card",
 	}
+	jsonData, _ := json.Marshal(cardData)
+
+	// ブラウザへ送信
+	select {
+	case cardEventChan <- string(jsonData):
+	default:
+	}
+	return true
 }
 
+// 交通系ICカード（物理）読み取り処理
+func tryReadICCard(card *scard.Card) bool {
+	// 1. 交通系ICの履歴・残高サービスコード(090F)を選択
+	selectCmd := []byte{0xFF, 0xA4, 0x00, 0x01, 0x02, 0x0F, 0x09}
+	rsp, err := card.Transmit(selectCmd)
+	
+	if err != nil || len(rsp) < 2 {
+		return false
+	}
+
+	statusWord := rsp[len(rsp)-2:]
+	if statusWord[0] != 0x90 && statusWord[0] != 0x91 {
+		return false
+	}
+
+	// 2. データ読み出し (最新の履歴であるブロック0を読み出す)
+	readCmd := []byte{0xFF, 0xB0, 0x00, 0x00, 0x10}
+	rsp, err = card.Transmit(readCmd)
+	if err != nil || len(rsp) < 18 {
+		return false
+	}
+
+	// 3. 残高データの抽出 (10バイト目と11バイト目)
+	balance := int(rsp[10]) | (int(rsp[11]) << 8)
+	
+	// JSON形式で作成
+	cardData := map[string]interface{}{
+		"type":      "ic_card",
+		"balance":   balance,
+		"card_name": "IC Card",
+	}
+	jsonData, _ := json.Marshal(cardData)
+
+	// ブラウザへ送信
+	select {
+	case cardEventChan <- string(jsonData):
+	default:
+	}
+	
+	return true
+}
+
+// CSV保存処理
 func saveToCSV(studentID string) {
 	file, err := os.OpenFile("students_db.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
