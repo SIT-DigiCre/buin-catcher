@@ -1,7 +1,7 @@
 # student-id-card-reader
 
 学生証に記録された学籍番号を読み取り、csvに記録するGoアプリケーションです。
-WebUIが存在します。
+WebUIが存在します。Goを実行するとアクセスすべきURLが表示されます。
 
 # How To Run
 
