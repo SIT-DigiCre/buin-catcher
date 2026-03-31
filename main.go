@@ -167,7 +167,11 @@ func tryReadStudentCard(card *scard.Card) bool {
 		"student_id": studentID,
 		"card_name": "SIT Student Card",
 	}
-	jsonData, _ := json.Marshal(cardData)
+	jsonData, err := json.Marshal(cardData)
+	if err != nil {
+		log.Printf("学生証データのJSON変換失敗: %v", err)
+		return false
+	}
 
 	// ブラウザへ送信
 	select {
@@ -208,7 +212,11 @@ func tryReadICCard(card *scard.Card) bool {
 		"balance":   balance,
 		"card_name": "IC Card",
 	}
-	jsonData, _ := json.Marshal(cardData)
+	jsonData, err := json.Marshal(cardData)
+	if err != nil {
+		log.Printf("交通系ICカードデータのJSON変換失敗: %v", err)
+		return false
+	}
 
 	// ブラウザへ送信
 	select {
