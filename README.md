@@ -15,7 +15,9 @@ https://www.sony.co.jp/Products/felica/consumer/support/download/nfcportsoftware
 
 https://go.dev/
 
-3. Goを実行します。
+3. コンピューターのUSBポートにPaSoRi(RC-S380)を接続します。
+
+4. Goを実行します。
 
 ```
 go run main.go
