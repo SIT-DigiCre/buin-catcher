@@ -17,8 +17,10 @@ import (
 var cardEventChan = make(chan string, 10)
 
 func init() {
-	// デバッグログを出力しない
-	log.SetOutput(io.Discard)
+	// デフォルトではログを出力するが、環境変数 LOG_QUIET=1 のときのみ抑制する
+	if os.Getenv("LOG_QUIET") == "1" {
+		log.SetOutput(io.Discard)
+	}
 }
 
 func main() {
