@@ -109,6 +109,18 @@
             position: relative;
             z-index: 5; 
         }
+
+        .id-display.ic-card {
+            color: #28a745; /* IC カード用（緑色） */
+        }
+
+        .card-info {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+            min-height: 20px;
+        }
+
         .cracker {
             position: absolute;
             font-size: 80px;
@@ -199,13 +211,14 @@
     <div class="container">
         <img src="/digicre_logo.svg" alt="デジクリロゴ" class="container-logo">
         <h1>タッチありがとう！</h1>
-        <div class="status">入部メールを送信します</div>
+        <div class="status" id="status-label">入部メールを送信します</div>
         
         <div id="id-presenter" class="id-presenter">
             <div class="cracker cracker-left">🎉</div>
             <div id="student-id" class="id-display">--------</div>
             <div class="cracker cracker-right">🎉</div>
         </div>
+        <div class="card-info" id="card-info"></div>
     </div>
 
     <div class="waiting-icon" id="waiting-icon">
@@ -217,6 +230,8 @@
     <script>
         const idPresenter = document.getElementById('id-presenter');
         const idDisplay = document.getElementById('student-id');
+        const statusLabel = document.getElementById('status-label');
+        const cardInfo = document.getElementById('card-info');
         const fanfareSound = document.getElementById('fanfare-sound');
         const splashScreen = document.getElementById('splash');
         const unlockMsg = document.getElementById('unlock-msg');
@@ -257,8 +272,14 @@
         const evtSource = new EventSource("/events");
 
         evtSource.onmessage = function(event) {
-            const studentId = event.data;
-            
+            let cardData;
+            try {
+                cardData = JSON.parse(event.data);
+            } catch (e) {
+                // 古いフォーマットの場合（後方互換性）
+                cardData = { type: "student", student_id: event.data, card_name: "SIT Student Card" };
+            }
+
             if (!splashScreen.classList.contains('hidden')) {
                 splashScreen.classList.add('hidden');
             }
@@ -266,7 +287,20 @@
             clearTimeout(idleTimer);
             clearTimeout(resetTextTimer);
             
-            idDisplay.innerText = studentId;
+            // カード種別に応じた表示
+            if (cardData.type === "student") {
+                // 学生証
+                idDisplay.innerText = cardData.student_id;
+                idDisplay.classList.remove('ic-card');
+                statusLabel.innerText = "入部メールを送信します";
+                cardInfo.innerText = cardData.card_name || "";
+            } else if (cardData.type === "ic_card") {
+                // 交通系IC
+                idDisplay.innerText = "¥" + cardData.balance.toLocaleString('ja-JP');
+                idDisplay.classList.add('ic-card');
+                statusLabel.innerText = "";
+                cardInfo.innerText = cardData.card_name || "IC Card";
+            }
 
             idPresenter.classList.remove('pop');
             void idPresenter.offsetWidth; 
@@ -282,6 +316,9 @@
                 
                 resetTextTimer = setTimeout(() => {
                     idDisplay.innerText = "--------";
+                    idDisplay.classList.remove('ic-card');
+                    statusLabel.innerText = "入部メールを送信します";
+                    cardInfo.innerText = "";
                 }, 800);
                 
             }, IDLE_TIMEOUT_MS);
