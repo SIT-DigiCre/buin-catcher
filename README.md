@@ -1,7 +1,7 @@
 # student-id-card-reader
 
 学生証に記録された学籍番号を読み取り、csvに記録するGoアプリケーションです。
-WebUIが存在します。Goを実行するとアクセスすべきURLが表示されます。
+main.goを実行時にログ出力されるURLから、WebUIへアクセスできます。
 
 # How To Run
 
@@ -17,7 +17,7 @@ https://go.dev/
 
 3. コンピューターのUSBポートにPaSoRi(RC-S380)を接続します。
 
-4. Goを実行します。
+4. Goで実行します。
 
 ```
 go run main.go
