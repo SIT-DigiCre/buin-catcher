@@ -116,6 +116,12 @@ func processCard(ctx *scard.Context, readerName string) {
 		return
 	}
 
+	// ステータスワード（SW1/SW2）の確認（末尾2バイト）
+	statusWord := rsp[len(rsp)-2 : len(rsp)]
+	if statusWord[0] != 0x90 && statusWord[0] != 0x91 {
+		return
+	}
+
 	// 1. まずは学生証かチェック
 	if tryReadStudentCard(card) {
 		return
