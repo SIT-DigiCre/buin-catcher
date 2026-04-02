@@ -51,9 +51,37 @@
             visibility: hidden;
         }
 
+        .splash-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s ease;
+        }
+
+        .splash-content.hidden {
+            display: none;
+        }
+
+        .splash-text {
+            color: var(--color-white);
+            font-size: 48px;
+            font-weight: bold;
+            opacity: 0.9;
+            /* animation: pulse 2s ease-in-out infinite; */
+        }
+
+        .splash-text-top {
+            margin-bottom: 30px;
+        }
+
+        .splash-text-bottom {
+            margin-top: 30px;
+        }
+
         .splash img {
-            width: 200px;
-            height: 200px;
+            width: 600px;
+            height: 400px;
             object-fit: contain;
             filter: brightness(0) invert(1);
             animation: pulse 3s ease-in-out infinite;
@@ -66,7 +94,7 @@
             font-size: 18px;
             font-weight: bold;
             opacity: 0.8;
-            animation: pulse 2s ease-in-out infinite;
+            /* animation: pulse 2s ease-in-out infinite; */
         }
 
         /* =========================================
@@ -204,14 +232,23 @@
 <body>
 
     <div class="splash" id="splash">
-        <img src="/digicre_logo.svg" alt="デジクリロゴ">
+        <div class="splash-content" id="splash-content-1">
+            <div class="splash-text splash-text-top">学生証をタッチして</div>
+            <img src="/digicre_logo.svg" alt="デジクリロゴ">
+            <div class="splash-text splash-text-bottom">入部フォームを受け取ろう</div>
+        </div>
+        <div class="splash-content hidden" id="splash-content-2">
+            <!-- <div class="splash-text splash-text-top">学生証をタッチして</div> -->
+            <img src="/digicre_logo.svg" alt="デジクリロゴ">
+            <!-- <div class="splash-text splash-text-bottom">入部フォームを受け取ろう</div> -->
+        </div>
         <div class="unlock-msg" id="unlock-msg">画面をタップしてフルスクリーンで開始してください</div>
     </div>
 
     <div class="container">
         <img src="/digicre_logo.svg" alt="デジクリロゴ" class="container-logo">
         <h1>タッチありがとう！</h1>
-        <div class="status" id="status-label">入部メールを送信します</div>
+        <div class="status" id="status-label">後日入部メールを送信します</div>
         
         <div id="id-presenter" class="id-presenter">
             <div class="cracker cracker-left">🎉</div>
@@ -235,13 +272,36 @@
         const fanfareSound = document.getElementById('fanfare-sound');
         const splashScreen = document.getElementById('splash');
         const unlockMsg = document.getElementById('unlock-msg');
+        const splashContent1 = document.getElementById('splash-content-1');
+        const splashContent2 = document.getElementById('splash-content-2');
 
         let isAudioUnlocked = false;
+        let currentSplashContent = 1; // 現在表示中のコンテンツ (1 or 2)
 
         // 待機画面に戻るまでの時間（ミリ秒）: 5秒
         const IDLE_TIMEOUT_MS = 5000;
         let idleTimer; 
         let resetTextTimer; 
+
+        // スペースキーで待機画面コンテンツを切り替え
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !splashScreen.classList.contains('hidden')) {
+                e.preventDefault(); // デフォルトのスペースキー処理を防止
+                toggleSplashContent();
+            }
+        });
+
+        function toggleSplashContent() {
+            if (currentSplashContent === 1) {
+                splashContent1.classList.add('hidden');
+                splashContent2.classList.remove('hidden');
+                currentSplashContent = 2;
+            } else {
+                splashContent2.classList.add('hidden');
+                splashContent1.classList.remove('hidden');
+                currentSplashContent = 1;
+            }
+        }
 
         // 1. フルスクリーン化 ＆ 音声のロック解除処理
         document.body.addEventListener('click', () => {
@@ -313,6 +373,9 @@
 
             idleTimer = setTimeout(() => {
                 splashScreen.classList.remove('hidden'); 
+                currentSplashContent = 1; // 初期状態に戻す
+                splashContent1.classList.remove('hidden');
+                splashContent2.classList.add('hidden');
                 
                 resetTextTimer = setTimeout(() => {
                     idDisplay.innerText = "--------";
