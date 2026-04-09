@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ebfe/scard"
@@ -80,7 +81,29 @@ func startNFCReader() {
 		log.Fatalf("リーダーが見つかりません。")
 	}
 
-	readerName := readers[0]
+	// PaSoRi(Sony FeliCa)を優先的に選択
+	var readerName string
+	for _, name := range readers {
+		if strings.Contains(name, "PaSoRi") || strings.Contains(name, "Sony FeliCa") {
+			readerName = name
+			log.Printf("PaSoRiを使用します: %s", name)
+			break
+		}
+	}
+
+	if readerName == "" {
+		// PaSoRiが見つからない場合は、NXPなど内蔵リーダーを自動除外して最初のリーダーを使用
+		for _, name := range readers {
+			if !strings.Contains(name, "NXP") {
+				readerName = name
+				break
+			}
+		}
+		if readerName == "" {
+			readerName = readers[0]
+		}
+		log.Printf("警告: PaSoRiが見つかりません。別のリーダーを使用します: %s", readerName)
+	}
 	rs := []scard.ReaderState{{Reader: readerName, CurrentState: scard.StateUnaware}}
 
 	for {
