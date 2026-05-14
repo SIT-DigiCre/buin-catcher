@@ -37,7 +37,7 @@ func main() {
 	fmt.Println(" Webサーバー起動: http://localhost:8080")
 	fmt.Println(" ブラウザで上記のURLを開いてください")
 	fmt.Println("=========================================")
-	
+
 	// ポート8080でサーバーを起動
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
@@ -110,7 +110,7 @@ func processCard(ctx *scard.Context, readerName string) {
 	// 通信確認 (IDmの取得)
 	idmCmd := []byte{0xFF, 0xCA, 0x00, 0x00, 0x00}
 	rsp, err := card.Transmit(idmCmd)
-	
+
 	// 物理のFeliCaカードであれば、10バイト以上のレスポンスが返ります
 	if err != nil || len(rsp) < 10 {
 		return
@@ -138,7 +138,7 @@ func tryReadStudentCard(card *scard.Card) bool {
 	// 芝浦工大のサービスコード(010B)を選択
 	selectCmd := []byte{0xFF, 0xA4, 0x00, 0x01, 0x02, 0x0B, 0x01}
 	rsp, err := card.Transmit(selectCmd)
-	
+
 	if err != nil || len(rsp) < 2 {
 		return false
 	}
@@ -158,14 +158,17 @@ func tryReadStudentCard(card *scard.Card) bool {
 	// 学籍番号抽出（3〜9バイト目）
 	studentID := string(rsp[3:10])
 
+	// CLIにログ出力
+	fmt.Printf("[%s] 学籍番号: %s\n", time.Now().Format("2006-01-02 15:04:05"), studentID)
+
 	// CSVに保存
 	saveToCSV(studentID)
 
 	// JSON形式で作成
 	cardData := map[string]interface{}{
-		"type":      "student",
+		"type":       "student",
 		"student_id": studentID,
-		"card_name": "SIT Student Card",
+		"card_name":  "SIT Student Card",
 	}
 	jsonData, err := json.Marshal(cardData)
 	if err != nil {
@@ -186,7 +189,7 @@ func tryReadICCard(card *scard.Card) bool {
 	// 1. 交通系ICの履歴・残高サービスコード(090F)を選択
 	selectCmd := []byte{0xFF, 0xA4, 0x00, 0x01, 0x02, 0x0F, 0x09}
 	rsp, err := card.Transmit(selectCmd)
-	
+
 	if err != nil || len(rsp) < 2 {
 		return false
 	}
@@ -205,7 +208,10 @@ func tryReadICCard(card *scard.Card) bool {
 
 	// 3. 残高データの抽出 (10バイト目と11バイト目)
 	balance := int(rsp[10]) | (int(rsp[11]) << 8)
-	
+
+	// CLIにログ出力
+	fmt.Printf("[%s] 交通系ICカード読み取り（残高: %d円）\n", time.Now().Format("2006-01-02 15:04:05"), balance)
+
 	// JSON形式で作成
 	cardData := map[string]interface{}{
 		"type":      "ic_card",
@@ -223,7 +229,7 @@ func tryReadICCard(card *scard.Card) bool {
 	case cardEventChan <- string(jsonData):
 	default:
 	}
-	
+
 	return true
 }
 
